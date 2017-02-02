@@ -1,27 +1,41 @@
 # coding: utf-8
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import Product, Category
+from django.views import generic
 
 
-def product_list(request):
+class ProductListView(generic.ListView):
 
-    context = {
-        'product_list': Product.objects.all(),
-    }
+    # queryset = Product.objects.all()
+    model = Product
+    template_name = 'catalog/product_list.html'
+    context_object_name = 'products'
+    paginate_by = 3
 
-    return render(request, 'catalog/product_list.html', context)
 
+class CategoryListView(generic.ListView):
 
-def category(request, slug):
+    template_name = 'catalog/category.html'
+    context_object_name = 'product_list'
+    paginate_by = 3
 
-    category = Category.objects.get(slug=slug)
-    context = {
-        'current_category': category,
-        'product_list': Product.objects.filter(category=category),
-    }
+    def get_queryset(self):
+        return Product.objects.filter(category__slug=self.kwargs.get('slug'))
 
-    return render(request, 'catalog/category.html', context)
+    def get_context_data(self, **kwargs):
+        context = super(CategoryListView, self).get_context_data(**kwargs)
+        context['current_category'] = get_object_or_404(Category, slug=self.kwargs.get('slug'))
+        return context
 
+'''
+class ProductListView(generic.ListView):
+
+    template_name = 'catalog/product.html'
+    context_object_name = 'product'
+
+    def get_queryset(self):
+        return get_object_or_404(Product, slug=self.kwargs.get('slug'))
+'''
 
 def product(request, slug):
 
@@ -32,3 +46,8 @@ def product(request, slug):
     }
 
     return render(request, 'catalog/product.html', context)
+
+
+product_list = ProductListView.as_view()
+category = CategoryListView.as_view()
+#product = ProductListView.as_view()
