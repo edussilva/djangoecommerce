@@ -42,3 +42,4 @@ traitlets==4.3.1
 wcwidth==0.1.7
 whitenoise==3.3.0
 widgetsnbextension==1.2.6
+psycopg2==2.6.1
