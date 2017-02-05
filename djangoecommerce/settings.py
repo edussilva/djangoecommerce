@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # apps
     'core',
     'catalog',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -150,7 +151,15 @@ EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = 'admin@djangoecommerce-edussilva.com'
 
-
+# Auth
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_URL = 'logout'
+AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'accounts.backends.ModelBackend',
+)
 
 try:
     from .local_settings import *
