@@ -1,6 +1,8 @@
 # coding: utf-8
+from pagseguro import PagSeguro
 from django.db import models
 from django.conf import settings
+from catalog.models import Product
 
 
 class CartItemManager(models.Manager):
@@ -84,7 +86,49 @@ class Order(models.Model):
         verbose_name_plural = 'Pedidos'
 
     def __str__(self):
-        return 'Pedido #{}'.fomrat(self.pk)
+        return 'Pedido #{}'.format(self.pk)
+
+    def products(self):
+        products_ids = self.items.values_list('product')
+        return Product.objects.filter(pk__in=products_ids)
+
+    def total(self):
+        aggregate_queryset = self.items.aggregate(
+            total=models.Sum(
+                models.F('price') * models.F('quantity'),
+                output_field=models.DecimalField()
+            )
+        )
+        return aggregate_queryset.get('total')
+
+    def pagseguro_update_status(self, status):
+        if status == '3':
+            self.status = 1
+        elif status == '7':
+            self.status = 2
+        self.save()
+
+    def pagseguro(self):
+        pg = PagSeguro(
+            email=settings.PAGSEGURO_EMAIL, token=settings.PAGSEGURO_TOKEN,
+            config={'sandbox': settings.PAGSEGURO_SANDBOX}
+        )
+        pg.sender = {
+            'email': self.user.email
+        }
+        pg.reference_prefix = None
+        pg.shipping = None
+        pg.reference = self.pk
+        for item in self.items.all():
+            pg.items.append(
+                {
+                    'id': item.product.pk,
+                    'description': item.product.name,
+                    'quantity': item.quantity,
+                    'amount': '{:.2f}'.format(item.price),
+                }
+            )
+        return pg
 
 
 class OrderItem(models.Model):
