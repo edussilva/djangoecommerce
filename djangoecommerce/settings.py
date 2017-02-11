@@ -178,6 +178,8 @@ PAGSEGURO_TOKEN = ''
 PAGSEGURO_EMAIL = 'email@email.com'
 PAGSEGURO_SANDBOX = False
 
+
+
 try:
     from .local_settings import *
 except ImportError:
